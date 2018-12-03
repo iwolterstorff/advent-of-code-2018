@@ -1,16 +1,16 @@
+import qualified Data.IntSet as IntSet
+
 import System.Environment
-import System.IO
 
 -- Usage: ./day1 input.txt [1 or 2]
 
 main :: IO ()
 main = do
   [fileName, probNum] <- getArgs
-  handle <- openFile fileName ReadMode
-  fileContents <- hGetContents handle
+  fileContents <- readFile fileName
   case probNum of
     "1" -> print $ (stringIntsToSum . lines . filterOutPlus) fileContents
-    "2" -> print $ repeatToFindDupe (map read (lines $ filterOutPlus fileContents))
+    "2" -> print $ repeatToFindDupe (map (read::String->Int) (lines $ filterOutPlus fileContents))
     _ -> error "Wrong arguments format"
 
 stringIntsToSum :: [String] -> Integer
@@ -20,11 +20,11 @@ filterOutPlus :: String -> String
 filterOutPlus = filter (/= '+')
 
 repeatToFindDupe :: [Int] -> Int
-repeatToFindDupe xs = dupeFinderAcc (cycle xs) 0 []
+repeatToFindDupe xs = dupeFinderAcc (cycle xs) 0 IntSet.empty
 
-dupeFinderAcc :: [Int] -> Int -> [Int] -> Int
-dupeFinderAcc xs numTake hist =
-  if thisSum `elem` hist
+dupeFinderAcc :: [Int] -> Int -> IntSet.IntSet -> Int
+dupeFinderAcc (x:xs) n hist =
+  if thisSum `IntSet.member` hist
     then thisSum
-    else dupeFinderAcc xs (numTake + 1) (thisSum:hist)
-    where thisSum = sum (take numTake xs)
+    else dupeFinderAcc xs thisSum (thisSum `IntSet.insert` hist)
+    where thisSum = n + x
